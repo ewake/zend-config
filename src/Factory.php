@@ -135,12 +135,12 @@ class Factory
      * @param  bool $useIncludePath
      * @return array|Config
      */
-    public static function fromFiles(array $files, $returnConfigObject = false, $useIncludePath = false)
+    public static function fromFiles(array $files, $returnConfigObject = false, $useIncludePath = false, $preserveNumericKeys = false)
     {
         $config = [];
 
         foreach ($files as $file) {
-            $config = ArrayUtils::merge($config, static::fromFile($file, false, $useIncludePath));
+            $config = ArrayUtils::merge($config, static::fromFile($file, false, $useIncludePath), $preserveNumericKeys);
         }
 
         return ($returnConfigObject) ? new Config($config) : $config;
