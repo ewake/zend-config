@@ -1,22 +1,20 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
- *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
+ * @see       https://github.com/zendframework/zend-config for the canonical source repository
+ * @copyright Copyright (c) 2005-2017 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license   https://github.com/zendframework/zend-config/blob/master/LICENSE.md New BSD License
  */
 
 namespace ZendTest\Config\Reader\TestAssets;
 
-use Zend\Config\Reader\ReaderInterface;
 use Zend\Config\Exception;
+use Zend\Config\Reader\ReaderInterface;
 
 class DummyReader implements ReaderInterface
 {
     public function fromFile($filename)
     {
-        if (!is_readable($filename)) {
+        if (! is_readable($filename)) {
             throw new Exception\RuntimeException("File '{$filename}' doesn't exist or not readable");
         }
 
@@ -26,7 +24,7 @@ class DummyReader implements ReaderInterface
     public function fromString($string)
     {
         if (empty($string)) {
-            return array();
+            return [];
         }
 
         return unserialize($string);

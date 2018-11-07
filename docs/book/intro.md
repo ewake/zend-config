@@ -48,7 +48,7 @@ $host = $config->database->get('host', 'localhost');
 
 ## Using PHP Configuration Files
 
-PHP-basd configuration files are often recommended due to the speed with which
+PHP-based configuration files are often recommended due to the speed with which
 they are parsed, and the fact that they can be cached by opcode caches.
 
 The following code illustrates how to use PHP configuration files:
@@ -57,7 +57,7 @@ The following code illustrates how to use PHP configuration files:
 // config.php
 return [
     'webhost'  => 'www.example.com',
-    'database' => array(
+    'database' => [
         'adapter' => 'pdo_mysql',
         'params'  => [
             'host'     => 'db.example.com',

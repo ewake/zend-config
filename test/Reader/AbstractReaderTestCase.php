@@ -1,15 +1,14 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
- *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
+ * @see       https://github.com/zendframework/zend-config for the canonical source repository
+ * @copyright Copyright (c) 2005-2017 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license   https://github.com/zendframework/zend-config/blob/master/LICENSE.md New BSD License
  */
 
 namespace ZendTest\Config\Reader;
 
-use PHPUnit_Framework_TestCase as TestCase;
+use PHPUnit\Framework\TestCase;
+use Zend\Config\Exception;
 use Zend\Config\Reader\ReaderInterface;
 
 /**
@@ -33,7 +32,8 @@ abstract class AbstractReaderTestCase extends TestCase
     public function testMissingFile()
     {
         $filename = $this->getTestAssetPath('no-file');
-        $this->setExpectedException('Zend\Config\Exception\RuntimeException', "doesn't exist or not readable");
+        $this->expectException(Exception\RuntimeException::class);
+        $this->expectExceptionMessage("doesn't exist or not readable");
         $config = $this->reader->fromFile($filename);
     }
 

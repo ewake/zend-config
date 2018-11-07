@@ -1,30 +1,31 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
- *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
+ * @see       https://github.com/zendframework/zend-config for the canonical source repository
+ * @copyright Copyright (c) 2005-2017 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license   https://github.com/zendframework/zend-config/blob/master/LICENSE.md New BSD License
  */
 
 namespace ZendTest\Config;
 
+use PHPUnit\Framework\TestCase;
 use Zend\Config\Config;
+use Zend\Config\Exception;
+use Zend\Config\Processor\Constant as ConstantProcessor;
+use Zend\Config\Processor\Filter as FilterProcessor;
+use Zend\Config\Processor\Queue;
 use Zend\Config\Processor\Token as TokenProcessor;
 use Zend\Config\Processor\Translator as TranslatorProcessor;
-use Zend\Config\Processor\Filter as FilterProcessor;
-use Zend\Config\Processor\Constant as ConstantProcessor;
-use Zend\Config\Processor\Queue as Queue;
-use Zend\I18n\Translator\Translator;
-use Zend\I18n\Translator\Loader\PhpArray;
+use Zend\Filter\PregReplace;
 use Zend\Filter\StringToLower;
 use Zend\Filter\StringToUpper;
-use Zend\Filter\PregReplace;
+use Zend\I18n\Exception as I18nException;
+use Zend\I18n\Translator\Loader\PhpArray;
+use Zend\I18n\Translator\Translator;
 
 /**
  * @group      Zend_Config
  */
-class ProcessorTest extends \PHPUnit_Framework_TestCase
+class ProcessorTest extends TestCase
 {
     protected $nested;
     protected $tokenBare;
@@ -179,10 +180,8 @@ class ProcessorTest extends \PHPUnit_Framework_TestCase
     public function testAddInvalidToken()
     {
         $processor = new TokenProcessor();
-        $this->setExpectedException(
-            'Zend\Config\Exception\InvalidArgumentException',
-            'Cannot use ' . gettype([]) . ' as token name.'
-        );
+        $this->expectException(Exception\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cannot use ' . gettype([]) . ' as token name.');
         $processor->addToken([], 'bar');
     }
 
@@ -201,10 +200,8 @@ class ProcessorTest extends \PHPUnit_Framework_TestCase
         $processor = new TokenProcessor();
         $processor->addToken('BARETOKEN', 'some replaced value');
 
-        $this->setExpectedException(
-            'Zend\Config\Exception\InvalidArgumentException',
-            'Cannot process config because it is read-only'
-        );
+        $this->expectException(Exception\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cannot process config because it is read-only');
         $processor->process($config);
     }
 
@@ -298,8 +295,8 @@ class ProcessorTest extends \PHPUnit_Framework_TestCase
 
         $processor->process($config);
 
-        $this->assertSame(true, $config['trueBoolKey']);
-        $this->assertSame(false, $config['falseBoolKey']);
+        $this->assertTrue($config['trueBoolKey']);
+        $this->assertFalse($config['falseBoolKey']);
         $this->assertSame(123, $config['intKey']);
         $this->assertSame((float) 123.456, $config['floatKey']);
         $this->assertSame((double) 456.789, $config['doubleKey']);
@@ -328,7 +325,7 @@ class ProcessorTest extends \PHPUnit_Framework_TestCase
 
         $this->assertSame('R', $config['trueBoolKey']);
         $this->assertSame('barR', $config['foo']);
-        $this->assertSame(false, $config['falseBoolKey']);
+        $this->assertFalse($config['falseBoolKey']);
         $this->assertSame('R23', $config['intKey']);
         $this->assertSame('R23.456', $config['floatKey']);
         $this->assertSame('456.78R', $config['doubleKey']);
@@ -407,7 +404,7 @@ class ProcessorTest extends \PHPUnit_Framework_TestCase
 
     public function testTranslator()
     {
-        if (!extension_loaded('intl')) {
+        if (! extension_loaded('intl')) {
             $this->markTestSkipped('ext/intl not enabled');
         }
 
@@ -430,8 +427,8 @@ class ProcessorTest extends \PHPUnit_Framework_TestCase
             $this->markTestSkipped('ext/intl enabled');
         }
 
-        $this->setExpectedException(
-            'Zend\I18n\Exception\ExtensionNotLoadedException',
+        $this->expectException(I18nException\ExtensionNotLoadedException::class);
+        $this->expectExceptionMessage(
             'Zend\I18n\Translator component requires the intl PHP extension'
         );
 
@@ -449,16 +446,14 @@ class ProcessorTest extends \PHPUnit_Framework_TestCase
         $translator = new Translator();
         $processor  = new TranslatorProcessor($translator);
 
-        $this->setExpectedException(
-            'Zend\Config\Exception\InvalidArgumentException',
-            'Cannot process config because it is read-only'
-        );
+        $this->expectException(Exception\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cannot process config because it is read-only');
         $processor->process($config);
     }
 
     public function testTranslatorSingleValue()
     {
-        if (!extension_loaded('intl')) {
+        if (! extension_loaded('intl')) {
             $this->markTestSkipped('ext/intl not enabled');
         }
 
@@ -475,10 +470,8 @@ class ProcessorTest extends \PHPUnit_Framework_TestCase
             $this->markTestSkipped('ext/intl enabled');
         }
 
-        $this->setExpectedException(
-            'Zend\I18n\Exception\ExtensionNotLoadedException',
-            'Zend\I18n\Translator component requires the intl PHP extension'
-        );
+        $this->expectException(I18nException\ExtensionNotLoadedException::class);
+        $this->expectExceptionMessage('Zend\I18n\Translator component requires the intl PHP extension');
 
         $translator = new Translator();
         $translator->addTranslationFile('phparray', $this->translatorFile);
@@ -506,10 +499,8 @@ class ProcessorTest extends \PHPUnit_Framework_TestCase
         $filter = new StringToLower();
         $processor = new FilterProcessor($filter);
 
-        $this->setExpectedException(
-            'Zend\Config\Exception\InvalidArgumentException',
-            'Cannot process config because it is read-only'
-        );
+        $this->expectException(Exception\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cannot process config because it is read-only');
         $processor->process($config);
     }
 
@@ -557,10 +548,8 @@ class ProcessorTest extends \PHPUnit_Framework_TestCase
         $queue = new Queue();
         $queue->insert($lowerProcessor);
 
-        $this->setExpectedException(
-            'Zend\Config\Exception\InvalidArgumentException',
-            'Cannot process config because it is read-only'
-        );
+        $this->expectException(Exception\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cannot process config because it is read-only');
         $queue->process($config);
     }
 
@@ -578,7 +567,7 @@ class ProcessorTest extends \PHPUnit_Framework_TestCase
         $queue->insert($upperProcessor);
         $queue->insert($lowerProcessor);
 
-        $data ='TeSt';
+        $data = 'TeSt';
         $this->assertEquals('test', $queue->processValue($data));
     }
 

@@ -1,14 +1,13 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
- *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
+ * @see       https://github.com/zendframework/zend-config for the canonical source repository
+ * @copyright Copyright (c) 2005-2018 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license   https://github.com/zendframework/zend-config/blob/master/LICENSE.md New BSD License
  */
 
 namespace ZendTest\Config\Reader;
 
+use Zend\Config\Exception;
 use Zend\Config\Reader\JavaProperties;
 
 /**
@@ -73,7 +72,55 @@ ASSET;
 
         $expectedErrorMessage = 'Cannot process @include statement for a string';
 
-        $this->setExpectedException('Zend\Config\Exception\RuntimeException', $expectedErrorMessage);
+        $this->expectException(Exception\RuntimeException::class);
+        $this->expectExceptionMessage($expectedErrorMessage);
         $arrayJavaPropterties = $this->reader->fromString($JavaProperties);
+    }
+
+    public function testAllowsSpecifyingAlternateKeyValueDelimiter()
+    {
+        $reader = new JavaProperties('=');
+
+        $arrayJavaProperties = $reader->fromFile($this->getTestAssetPath('alternate-delimiter'));
+
+        $this->assertNotEmpty($arrayJavaProperties);
+        $this->assertEquals($arrayJavaProperties['single.line'], 'test');
+        $this->assertEquals($arrayJavaProperties['multiple'], 'line test');
+    }
+
+    public function invalidDelimiters()
+    {
+        return [
+            'null'         => [null],
+            'true'         => [true],
+            'false'        => [false],
+            'zero'         => [0],
+            'int'          => [1],
+            'zero-float'   => [0.0],
+            'float'        => [1.1],
+            'empty-string' => [''],
+            'array'        => [[':']],
+            'object'       => [(object) ['delimiter' => ':']],
+        ];
+    }
+
+    /**
+     * @dataProvider invalidDelimiters
+     * @param mixed $delimiter
+     */
+    public function testInvalidDelimiterValuesResultInExceptions($delimiter)
+    {
+        $this->expectException(Exception\InvalidArgumentException::class);
+        new JavaProperties($delimiter);
+    }
+
+    public function testProvidesOptionToTrimWhitespaceFromKeysAndValues()
+    {
+        $reader = new JavaProperties(JavaProperties::DELIMITER_DEFAULT, JavaProperties::WHITESPACE_TRIM);
+        $arrayJavaProperties = $reader->fromFile($this->getTestAssetPath('key-value-whitespace'));
+
+        $this->assertNotEmpty($arrayJavaProperties);
+        $this->assertEquals($arrayJavaProperties['single.line'], 'test');
+        $this->assertEquals($arrayJavaProperties['multiple'], 'line test');
     }
 }

@@ -1,23 +1,27 @@
 <?php
 /**
- * Zend Framework (http://framework.zend.com/)
- *
- * @link      http://github.com/zendframework/zf2 for the canonical source repository
- * @copyright Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
+ * @see       https://github.com/zendframework/zend-config for the canonical source repository
+ * @copyright Copyright (c) 2005-2017 Zend Technologies USA Inc. (http://www.zend.com)
+ * @license   https://github.com/zendframework/zend-config/blob/master/LICENSE.md New BSD License
  */
 
 namespace ZendTest\Config;
 
 use Interop\Container\ContainerInterface;
+use InvalidArgumentException;
+use PHPUnit\Framework\TestCase;
+use ReflectionProperty;
+use RuntimeException;
 use Zend\Config\Factory;
 use Zend\Config\ReaderPluginManager;
+use Zend\Config\StandaloneReaderPluginManager;
+use Zend\Config\StandaloneWriterPluginManager;
 use Zend\Config\WriterPluginManager;
 
 /**
  * @group      Zend_Config
  */
-class FactoryTest extends \PHPUnit_Framework_TestCase
+class FactoryTest extends TestCase
 {
     protected $tmpFiles = [];
     protected $originalIncludePath;
@@ -34,6 +38,7 @@ class FactoryTest extends \PHPUnit_Framework_TestCase
     {
         $this->originalIncludePath = get_include_path();
         set_include_path(__DIR__ . '/TestAssets');
+        $this->resetPluginManagers();
     }
 
     public function tearDown()
@@ -42,11 +47,22 @@ class FactoryTest extends \PHPUnit_Framework_TestCase
 
         foreach ($this->tmpFiles as $file) {
             if (file_exists($file)) {
-                if (!is_writable($file)) {
+                if (! is_writable($file)) {
                     chmod($file, 0777);
                 }
                 @unlink($file);
             }
+        }
+
+        $this->resetPluginManagers();
+    }
+
+    public function resetPluginManagers()
+    {
+        foreach (['readers', 'writers'] as $pluginManager) {
+            $r = new ReflectionProperty(Factory::class, $pluginManager);
+            $r->setAccessible(true);
+            $r->setValue(null);
         }
     }
 
@@ -149,13 +165,13 @@ class FactoryTest extends \PHPUnit_Framework_TestCase
 
     public function testNonExistentFileThrowsRuntimeException()
     {
-        $this->setExpectedException('RuntimeException');
+        $this->expectException(RuntimeException::class);
         $config = Factory::fromFile('foo.bar');
     }
 
     public function testUnsupportedFileExtensionThrowsRuntimeException()
     {
-        $this->setExpectedException('RuntimeException');
+        $this->expectException(RuntimeException::class);
         $config = Factory::fromFile(__DIR__ . '/TestAssets/bad.ext');
     }
 
@@ -186,13 +202,13 @@ class FactoryTest extends \PHPUnit_Framework_TestCase
 
     public function testFactoryToFileInvalidFileExtension()
     {
-        $this->setExpectedException('RuntimeException');
+        $this->expectException(RuntimeException::class);
         $result = Factory::toFile(__DIR__.'/TestAssets/bad.ext', []);
     }
 
     public function testFactoryToFileNoDirInHere()
     {
-        $this->setExpectedException('RuntimeException');
+        $this->expectException(RuntimeException::class);
         $result = Factory::toFile(__DIR__.'/TestAssets/NoDirInHere/nonExisiting/dummy.php', []);
     }
 
@@ -219,13 +235,13 @@ class FactoryTest extends \PHPUnit_Framework_TestCase
 
     public function testFactoryToFileWrongConfig()
     {
-        $this->setExpectedException('InvalidArgumentException');
+        $this->expectException(InvalidArgumentException::class);
         $result = Factory::toFile('test.ini', 'Im wrong');
     }
 
     public function testFactoryRegisterInvalidWriter()
     {
-        $this->setExpectedException('InvalidArgumentException');
+        $this->expectException(InvalidArgumentException::class);
         Factory::registerWriter('dum', new Reader\TestAssets\DummyReader());
     }
 
@@ -253,5 +269,17 @@ class FactoryTest extends \PHPUnit_Framework_TestCase
 
         $res = Factory::toFile($file, ['one' => 1]);
         $this->assertEquals($res, true);
+    }
+
+    public function testDefaultReaderPluginManagerIsStandaloneVariant()
+    {
+        $readers = Factory::getReaderPluginManager();
+        $this->assertInstanceOf(StandaloneReaderPluginManager::class, $readers);
+    }
+
+    public function testDefaultWriterPluginManagerIsStandaloneVariant()
+    {
+        $writers = Factory::getWriterPluginManager();
+        $this->assertInstanceOf(StandaloneWriterPluginManager::class, $writers);
     }
 }
